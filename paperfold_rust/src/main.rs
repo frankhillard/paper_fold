@@ -1,9 +1,8 @@
 use paper;
 
 fn main() {
-    println!("Hello, world!");
-    println!("ff");
-
+    println!("PaperFold!");
+    let _p : paper::Paper = paper::Paper::initialize(4_u8, 3_u8);
 }
 
 #[cfg(test)]

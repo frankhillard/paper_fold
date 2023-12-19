@@ -11,7 +11,7 @@ impl Paper {
     pub fn width(&self) -> u8 { self.width }
     pub fn height(&self) -> u8 { self.height }
     
-    fn fold_up(&self, index: u8) -> bool {
+    fn fold_up(&self, _index: u8) -> bool {
         true
     }
 }
