@@ -1,6 +1,3 @@
-extern crate unicode_segmentation;
-use unicode_segmentation::UnicodeSegmentation;
-
 pub enum Direction {
     UP,
     DOWN,
