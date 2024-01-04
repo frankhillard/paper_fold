@@ -26,5 +26,19 @@ mod tests {
         // assert_eq!(p.height(), 5_u8);
     }
 
+    #[test]
+    fn test_init_fold_right() {
+        let mut p : paper::Paper = paper::Paper::initialize(6_u8, 4_u8);
+        p.fold(1, paper::Direction::RIGHT);
+        println!("FOLD RIGHT 1: {:?}", p.data());
+
+        println!("{:?}", p.data().get(0).unwrap());
+        // p.fold(1, paper::Direction::RIGHT);
+
+
+        assert_eq!(p.width(), 5_u8);
+        // assert_eq!(p.height(), 5_u8);
+    }
+
 
 }
