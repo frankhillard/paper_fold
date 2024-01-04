@@ -41,15 +41,19 @@ impl Paper {
                 self.fold_up(index);
             },
             Direction::DOWN => {
-                // let (rev_top_part, rev_bottom_part) = self.data.split_at_mut(usize::from(self.height - index));
+                self.fold_down(index);
             },
-            Direction::LEFT => {},
-            Direction::RIGHT => {}
+            Direction::LEFT => {
+                self.fold_left(index);
+            },
+            Direction::RIGHT => {
+                self.fold_right(index);
+            }
         }
         
     }
 
-    fn fold_up(&mut self, index: u8) -> bool {
+    fn fold_up(&mut self, index: u8) {
         assert!(index > 0 && index < self.height);
         let (top_part, bottom_part) = self.data.split_at_mut(usize::from(index));
         // println!("top part {:?}: ", top_part);
@@ -61,9 +65,64 @@ impl Paper {
         }));
         let result = merge_lines(top_part.into(), bottom_part.into());
         self.data = result;
-        true
-        
+        self.height = u8::try_from(self.data.len()).ok().unwrap();       
     }
+
+    fn fold_left(&mut self, index: u8) {
+        assert!(index > 0 && index < self.width);
+        let mut res = transpose(self.data.clone());
+        
+        let (top_part, bottom_part) = res.split_at_mut(usize::from(index));
+        top_part.reverse();
+        top_part.iter_mut().for_each(|v| v.iter_mut().for_each(|s| {
+            let rev_str: String = s.chars().rev().collect::<String>(); 
+            *s = rev_str;
+        }));
+        let result = merge_lines(top_part.into(), bottom_part.into());
+        self.data = transpose(result);
+        self.width = u8::try_from(self.data.get(0).unwrap().len()).ok().unwrap();
+    }
+
+    fn fold_down(&mut self, index: u8) {
+        assert!(index > 0 && index < self.height);
+        let mut res: Vec<Vec<String>> = self.data.clone();
+        res.reverse();
+
+        let (top_part, bottom_part) = res.split_at_mut(usize::from(self.height - index));
+        // println!("top part {:?}: ", top_part);
+        // println!("bottom part {:?}: ", bottom_part);
+        top_part.reverse();
+        top_part.iter_mut().for_each(|v| v.iter_mut().for_each(|s| {
+            let rev_str: String = s.chars().rev().collect::<String>(); 
+            *s = rev_str;
+        }));
+        let mut result = merge_lines(top_part.into(), bottom_part.into());
+        result.reverse();
+        self.data = result;
+        self.height = u8::try_from(self.data.len()).ok().unwrap();
+    }
+
+    fn fold_right(&mut self, index: u8) {
+        assert!(index > 0 && index < self.width);
+        let mut res = transpose(self.data.clone());
+        res.reverse();
+
+        let (top_part, bottom_part) = res.split_at_mut(usize::from(self.width - index));
+        // println!("top part {:?}: ", top_part);
+        // println!("bottom part {:?}: ", bottom_part);
+        top_part.reverse();
+        top_part.iter_mut().for_each(|v| v.iter_mut().for_each(|s| {
+            let rev_str: String = s.chars().rev().collect::<String>(); 
+            *s = rev_str;
+        }));
+        let mut result = merge_lines(top_part.into(), bottom_part.into());
+        result.reverse();
+        self.data = transpose(result);
+        // self.height = u8::try_from(self.data.len()).ok().unwrap();
+        self.width = u8::try_from(self.data.get(0).unwrap().len()).ok().unwrap();
+    }
+
+
 }
 
 fn merge_lines(mut top: Vec<Vec<String>>, mut bottom: Vec<Vec<String>>) -> Vec<Vec<String>> {
@@ -102,6 +161,21 @@ fn merge_lines(mut top: Vec<Vec<String>>, mut bottom: Vec<Vec<String>>) -> Vec<V
 }
 
 
+fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
+    assert!(!v.is_empty());
+    let len = v[0].len();
+    let mut iters: Vec<_> = v.into_iter().map(|n| n.into_iter()).collect();
+    (0..len)
+        .map(|_| {
+            iters
+                .iter_mut()
+                .map(|n| n.next().unwrap())
+                .collect::<Vec<T>>()
+        })
+        .collect()
+}
+
+
 
 #[cfg(test)]
 mod tests {
@@ -125,7 +199,10 @@ mod tests {
     #[test]
     fn fold_1_up() {
         let mut paper: Paper = Paper::initialize(3_u8, 3_u8);
-        assert!(paper.fold_up(1_u8));
+        paper.fold_up(1_u8);
+        assert_eq!(paper.height(), 2);
+        assert_eq!(paper.width(), 3);
+
         let line_0 = paper.data.get(0).unwrap();
         assert_eq!(line_0.get(0).unwrap(), "AD");
         assert_eq!(line_0.get(1).unwrap(), "BE");
@@ -134,13 +211,15 @@ mod tests {
         assert_eq!(line_1.get(0).unwrap(), "G");
         assert_eq!(line_1.get(1).unwrap(), "H");
         assert_eq!(line_1.get(2).unwrap(), "I");
-
     }
 
     #[test]
     fn fold_2_up() {
         let mut paper: Paper = Paper::initialize(3_u8, 3_u8);
-        assert!(paper.fold_up(2_u8));
+        paper.fold_up(2_u8);
+        assert_eq!(paper.height(), 2);
+        assert_eq!(paper.width(), 3);
+
         let line_0 = paper.data.get(0).unwrap();
         assert_eq!(line_0.get(0).unwrap(), "DG");
         assert_eq!(line_0.get(1).unwrap(), "EH");
@@ -173,8 +252,11 @@ mod tests {
     #[test]
     fn fold_1_up_1_up() {
         let mut paper: Paper = Paper::initialize(3_u8, 3_u8);
-        assert!(paper.fold_up(1_u8));
-        assert!(paper.fold_up(1_u8));
+        paper.fold_up(1_u8);
+        paper.fold_up(1_u8);
+        assert_eq!(paper.height(), 1);
+        assert_eq!(paper.width(), 3);
+
         let line_0 = paper.data.get(0).unwrap();
         assert_eq!(line_0.get(0).unwrap(), "DAG");
         assert_eq!(line_0.get(1).unwrap(), "EBH");
@@ -184,12 +266,176 @@ mod tests {
     #[test]
     fn fold_2_up_1_up() {
         let mut paper: Paper = Paper::initialize(3_u8, 3_u8);
-        assert!(paper.fold_up(2_u8));
-        assert!(paper.fold_up(1_u8));
+        paper.fold_up(2_u8);
+        paper.fold_up(1_u8);
+
+        assert_eq!(paper.height(), 1);
+        assert_eq!(paper.width(), 3);
+
         let line_0 = paper.data.get(0).unwrap();
         assert_eq!(line_0.get(0).unwrap(), "GDA");
         assert_eq!(line_0.get(1).unwrap(), "HEB");
         assert_eq!(line_0.get(2).unwrap(), "IFC");
+    }
+
+    #[test]
+    fn fold_1_left() {
+        let mut paper: Paper = Paper::initialize(3_u8, 3_u8);
+        paper.fold_left(1_u8);
+        assert_eq!(paper.height(), 3);
+        assert_eq!(paper.width(), 2);
+        let line_0 = paper.data.get(0).unwrap();
+        assert_eq!(line_0.get(0).unwrap(), "AB");
+        assert_eq!(line_0.get(1).unwrap(), "C");
+        let line_1 = paper.data.get(1).unwrap();
+        assert_eq!(line_1.get(0).unwrap(), "DE");
+        assert_eq!(line_1.get(1).unwrap(), "F");
+        let line_2 = paper.data.get(2).unwrap();
+        assert_eq!(line_2.get(0).unwrap(), "GH");
+        assert_eq!(line_2.get(1).unwrap(), "I");
+    }
+
+    #[test]
+    fn fold_2_left() {
+        let mut paper: Paper = Paper::initialize(3_u8, 3_u8);
+        paper.fold_left(2_u8);
+        assert_eq!(paper.height(), 3);
+        assert_eq!(paper.width(), 2);
+        let line_0 = paper.data.get(0).unwrap();
+        assert_eq!(line_0.get(0).unwrap(), "BC");
+        assert_eq!(line_0.get(1).unwrap(), "A");
+        let line_1 = paper.data.get(1).unwrap();
+        assert_eq!(line_1.get(0).unwrap(), "EF");
+        assert_eq!(line_1.get(1).unwrap(), "D");
+        let line_2 = paper.data.get(2).unwrap();
+        assert_eq!(line_2.get(0).unwrap(), "HI");
+        assert_eq!(line_2.get(1).unwrap(), "G");
+    }
+
+    #[test]
+    fn fold_1_left_1_left() {
+        let mut paper: Paper = Paper::initialize(3_u8, 3_u8);
+        paper.fold_left(1_u8);
+        paper.fold_left(1_u8);
+        assert_eq!(paper.height(), 3);
+        assert_eq!(paper.width(), 1);
+        let line_0 = paper.data.get(0).unwrap();
+        assert_eq!(line_0.get(0).unwrap(), "BAC");
+        let line_1 = paper.data.get(1).unwrap();
+        assert_eq!(line_1.get(0).unwrap(), "EDF");
+        let line_2 = paper.data.get(2).unwrap();
+        assert_eq!(line_2.get(0).unwrap(), "HGI");
+    }
+
+    #[test]
+    fn fold_2_left_1_left() {
+        let mut paper: Paper = Paper::initialize(3_u8, 3_u8);
+        paper.fold_left(2_u8);
+        paper.fold_left(1_u8);
+        assert_eq!(paper.height(), 3);
+        assert_eq!(paper.width(), 1);
+        let line_0 = paper.data.get(0).unwrap();
+        assert_eq!(line_0.get(0).unwrap(), "CBA");
+        let line_1 = paper.data.get(1).unwrap();
+        assert_eq!(line_1.get(0).unwrap(), "FED");
+        let line_2 = paper.data.get(2).unwrap();
+        assert_eq!(line_2.get(0).unwrap(), "IHG");
+    }
+
+    #[test]
+    fn fold_1_left_1_up() {
+        let mut paper: Paper = Paper::initialize(3_u8, 3_u8);
+        paper.fold_left(1_u8);
+        paper.fold_up(1_u8);
+        assert_eq!(paper.height(), 2);
+        assert_eq!(paper.width(), 2);
+        let line_0 = paper.data.get(0).unwrap();
+        assert_eq!(line_0.get(0).unwrap(), "BADE");
+        assert_eq!(line_0.get(1).unwrap(), "CF");
+        let line_1 = paper.data.get(1).unwrap();
+        assert_eq!(line_1.get(0).unwrap(), "GH");
+        assert_eq!(line_1.get(1).unwrap(), "I");
+    }
+
+    #[test]
+    fn fold_2_left_2_up() {
+        let mut paper: Paper = Paper::initialize(3_u8, 3_u8);
+        paper.fold_left(2_u8);
+        paper.fold_up(2_u8);
+        assert_eq!(paper.height(), 2);
+        assert_eq!(paper.width(), 2);
+        let line_0 = paper.data.get(0).unwrap();
+        assert_eq!(line_0.get(0).unwrap(), "FEHI");
+        assert_eq!(line_0.get(1).unwrap(), "DG");
+        let line_1 = paper.data.get(1).unwrap();
+        assert_eq!(line_1.get(0).unwrap(), "CB");
+        assert_eq!(line_1.get(1).unwrap(), "A");
+    }
+
+    #[test]
+    fn fold_1_down() {
+        let mut paper: Paper = Paper::initialize(3_u8, 3_u8);
+        paper.fold_down(1_u8);
+        assert_eq!(paper.height(), 2);
+        assert_eq!(paper.width(), 3);
+        let line_0 = paper.data.get(0).unwrap();
+        assert_eq!(line_0.get(0).unwrap(), "G");
+        assert_eq!(line_0.get(1).unwrap(), "H");
+        assert_eq!(line_0.get(2).unwrap(), "I");
+        let line_1 = paper.data.get(1).unwrap();
+        assert_eq!(line_1.get(0).unwrap(), "DA");
+        assert_eq!(line_1.get(1).unwrap(), "EB");
+        assert_eq!(line_1.get(2).unwrap(), "FC");
+    }
+
+    #[test]
+    fn fold_2_down() {
+        let mut paper: Paper = Paper::initialize(3_u8, 3_u8);
+        paper.fold_down(2_u8);
+        assert_eq!(paper.height(), 2);
+        assert_eq!(paper.width(), 3);
+        let line_0 = paper.data.get(0).unwrap();
+        assert_eq!(line_0.get(0).unwrap(), "A");
+        assert_eq!(line_0.get(1).unwrap(), "B");
+        assert_eq!(line_0.get(2).unwrap(), "C");
+        let line_1 = paper.data.get(1).unwrap();
+        assert_eq!(line_1.get(0).unwrap(), "GD");
+        assert_eq!(line_1.get(1).unwrap(), "HE");
+        assert_eq!(line_1.get(2).unwrap(), "IF");
+    }
+
+    #[test]
+    fn fold_1_right() {
+        let mut paper: Paper = Paper::initialize(3_u8, 3_u8);
+        paper.fold_right(1_u8);
+        assert_eq!(paper.height(), 3);
+        assert_eq!(paper.width(), 2);
+        let line_0 = paper.data.get(0).unwrap();
+        assert_eq!(line_0.get(0).unwrap(), "C");
+        assert_eq!(line_0.get(1).unwrap(), "BA");
+        let line_1 = paper.data.get(1).unwrap();
+        assert_eq!(line_1.get(0).unwrap(), "F");
+        assert_eq!(line_1.get(1).unwrap(), "ED");
+        let line_2 = paper.data.get(2).unwrap();
+        assert_eq!(line_2.get(0).unwrap(), "I");
+        assert_eq!(line_2.get(1).unwrap(), "HG");   
+    }
+
+    #[test]
+    fn fold_2_right() {
+        let mut paper: Paper = Paper::initialize(3_u8, 3_u8);
+        paper.fold_right(2_u8);
+        assert_eq!(paper.height(), 3);
+        assert_eq!(paper.width(), 2);
+        let line_0 = paper.data.get(0).unwrap();
+        assert_eq!(line_0.get(0).unwrap(), "A");
+        assert_eq!(line_0.get(1).unwrap(), "CB");
+        let line_1 = paper.data.get(1).unwrap();
+        assert_eq!(line_1.get(0).unwrap(), "D");
+        assert_eq!(line_1.get(1).unwrap(), "FE");
+        let line_2 = paper.data.get(2).unwrap();
+        assert_eq!(line_2.get(0).unwrap(), "G");
+        assert_eq!(line_2.get(1).unwrap(), "IH");   
     }
 
 }
