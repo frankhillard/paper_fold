@@ -125,7 +125,7 @@ impl Paper {
 
 }
 
-fn merge_lines(mut top: Vec<Vec<String>>, mut bottom: Vec<Vec<String>>) -> Vec<Vec<String>> {
+fn merge_lines(top: Vec<Vec<String>>, bottom: Vec<Vec<String>>) -> Vec<Vec<String>> {
     println!("top part {:?}: ", top);
     println!("bottom part {:?}: ", bottom);
     let mut index: usize = 0;

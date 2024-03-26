@@ -25,7 +25,7 @@ mod tests {
     }
 
     #[test]
-    fn test_init_fold_up() {
+    fn test_init_fold_up_once() {
         let mut p : paper::Paper = paper::Paper::initialize(10_u8, 5_u8);
         p.fold(1, paper::Direction::UP);
         println!("{:?}", p.data());
@@ -68,6 +68,46 @@ mod tests {
 
         assert_eq!(p.width(), 1_u8);
         assert_eq!(p.height(), 4_u8);
+    }
+
+    #[test]
+    fn test_full_fold_up() {
+        let mut p : paper::Paper = paper::Paper::initialize(6_u8, 4_u8);
+        p.fold(1, paper::Direction::UP);
+        p.fold(1, paper::Direction::UP);
+        p.fold(1, paper::Direction::UP);
+
+        // it results in a single line (of 6 columns)
+        let line = p.data().get(0).unwrap().clone();
+        assert!(line.get(0).unwrap().clone().eq("MAGS"));
+        assert!(line.get(1).unwrap().clone().eq("NBHT"));
+        assert!(line.get(2).unwrap().clone().eq("OCIU"));
+        assert!(line.get(3).unwrap().clone().eq("PDJV"));
+        assert!(line.get(4).unwrap().clone().eq("QEKW"));
+        assert!(line.get(5).unwrap().clone().eq("RFLX"));
+
+        assert_eq!(p.width(), 6_u8);
+        assert_eq!(p.height(), 1_u8);
+    }
+
+    #[test]
+    fn test_full_fold_down() {
+        let mut p : paper::Paper = paper::Paper::initialize(6_u8, 4_u8);
+        p.fold(1, paper::Direction::DOWN);
+        p.fold(1, paper::Direction::DOWN);
+        p.fold(1, paper::Direction::DOWN);
+
+        // it results in a single line (of 6 columns)
+        let line = p.data().get(0).unwrap().clone();
+        assert!(line.get(0).unwrap().clone().eq("SMAG"));
+        assert!(line.get(1).unwrap().clone().eq("TNBH"));
+        assert!(line.get(2).unwrap().clone().eq("UOCI"));
+        assert!(line.get(3).unwrap().clone().eq("VPDJ"));
+        assert!(line.get(4).unwrap().clone().eq("WQEK"));
+        assert!(line.get(5).unwrap().clone().eq("XRFL"));
+
+        assert_eq!(p.width(), 6_u8);
+        assert_eq!(p.height(), 1_u8);
     }
 
 
